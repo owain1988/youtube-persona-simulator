@@ -28,8 +28,7 @@ async function fetchYouTubeVideos(query, maxResults = 5) {
     id: item.id.videoId,
     title: item.snippet.title,
     channel: item.snippet.channelTitle,
-    uploaded: 'recent',
-    views: 'unknown',
+    description: item.snippet.description.split(/\n|\./)[0],
     reason: `Matched query: ${query}`
   }));
 }
@@ -104,8 +103,8 @@ export default function Home() {
   return (
     <div style={{ padding: '2rem', fontFamily: 'sans-serif' }}>
       <h1 style={{ fontSize: '2rem', textAlign: 'center' }}>YouTube Persona Comparison Simulator</h1>
-      <div style={{ textAlign: 'center', margin: '1rem' }}>
-        <button onClick={generateFeeds} style={{ padding: '0.5rem 1rem', fontSize: '1rem', cursor: 'pointer' }}>Generate Feeds</button>
+      <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+        <button onClick={generateFeeds} style={{ padding: '0.75rem 1.25rem', fontSize: '1rem', fontWeight: 'bold', backgroundColor: '#0070f3', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>Generate Feeds</button>
       </div>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2rem', justifyContent: 'center' }}>
         {['A', 'B'].map(label => (
@@ -130,7 +129,7 @@ export default function Home() {
               <div key={video.id} style={{ borderBottom: '1px solid #eee', padding: '0.5rem 0' }}>
                 <iframe width="100%" height="200" src={`https://www.youtube.com/embed/${video.id}`} title={video.title} frameBorder="0" allow="autoplay"></iframe>
                 <p><strong>{video.title}</strong> - {video.channel}</p>
-                <p>{video.views} • {video.uploaded}</p>
+                <p><em>{video.description}</em></p>
                 <p><em>Why: {video.reason}</em></p>
                 <button onClick={() => logInteraction(label, video.id, 'like')}>Like</button>
                 <button onClick={() => logInteraction(label, video.id, 'dislike')}>Dislike</button>
@@ -175,4 +174,5 @@ export default function Home() {
     </div>
   );
 }
+
 
