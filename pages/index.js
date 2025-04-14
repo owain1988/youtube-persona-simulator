@@ -107,7 +107,7 @@ export default function Home() {
     <div style={{ padding: '2rem', fontFamily: 'sans-serif' }}>
       <h1 style={{ fontSize: '2rem', textAlign: 'center' }}>YouTube Persona Comparison Simulator</h1>
       <p style={{ maxWidth: '750px', margin: '1rem auto', textAlign: 'center' }}>
-        We all live in echo chambers these days whether we like it or not! But, seeing how others navigate YouTube can be incredibly useful in shaping understanding the plethora of world views that exist in todays complex and globally connected world. <br />
+        We all live in echo chambers these days whether we like it or not! Seeing how others navigate YouTube can be incredibly useful in understanding the plethora of world views that exist in todays complex and globally connected world. <br />
         Set political leanings and personality traits for each persona, then hit “Generate Feeds” to see their personalised YouTube recommendations side by side.
       </p>
       <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
