@@ -40,19 +40,16 @@ export default function Home() {
     const getFeed = async (p, traits, interactions) => {
       const queries = [];
 
-      // Political leaning base queries
       if (p < 30) queries.push("leftist politics", "progressive commentary");
       else if (p > 70) queries.push("conservative news", "right wing media");
       else queries.push("centrist politics", "independent analysis");
 
-      // Trait-based influence
       if (traits.includes("Curious")) queries.push("documentary", "educational exploration");
       if (traits.includes("Ironic")) queries.push("satire", "edgy humor");
       if (traits.includes("Analytical")) queries.push("longform analysis", "explainer videos");
       if (traits.includes("Tribalist")) queries.push("culture war debate", "reaction content");
       if (traits.includes("Anger-prone")) queries.push("rant", "controversial outrage");
 
-      // Use recent interaction influence
       const topInteracted = Object.entries(interactions)
         .filter(([_, count]) => count > 1)
         .map(([id]) => id);
@@ -61,13 +58,11 @@ export default function Home() {
         queries.push("follow up to " + topInteracted.slice(0, 2).join(" "));
       }
 
-      // Fetch multiple feeds and merge
       const results = await Promise.all(
         queries.slice(0, 4).map(q => fetchYouTubeVideos(q, 3))
       );
       const merged = results.flat();
 
-      // Shuffle
       for (let i = merged.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [merged[i], merged[j]] = [merged[j], merged[i]];
@@ -75,7 +70,24 @@ export default function Home() {
 
       return merged.slice(0, 6);
     };
-    };
+
+    const updated = { ...personas };
+    for (const key of Object.keys(updated)) {
+      const p = updated[key];
+      const feed = await getFeed(p.politics, p.traits, p.interactions);
+      updated[key] = {
+        ...p,
+        feed,
+        timeline: [...p.timeline, {
+          timestamp: new Date().toLocaleTimeString(),
+          politics: p.politics,
+          traits: [...p.traits],
+          interactions: { ...p.interactions },
+        }]
+      };
+    }
+    setPersonas(updated);
+  };
 
     const updated = { ...personas };
     for (const key of Object.keys(updated)) {
