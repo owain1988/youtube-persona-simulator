@@ -37,10 +37,6 @@ async function fetchYouTubeVideos(query, maxResults = 5) {
 export default function Home() {
   const [personas, setPersonas] = useState({ A: defaultPersona(), B: defaultPersona() });
 
-  useEffect(() => {
-    generateFeeds();
-  }, []);
-
   const generateFeeds = async () => {
     const getFeed = async (p, traits, interactions) => {
       let query = p < 30 ? "leftist politics" : p > 70 ? "conservative news" : "centrist news";
@@ -68,6 +64,10 @@ export default function Home() {
     }
     setPersonas(updated);
   };
+
+  useEffect(() => {
+    generateFeeds();
+  }, []);
 
   const toggleTrait = (label, trait) => {
     setPersonas(prev => ({
@@ -104,6 +104,9 @@ export default function Home() {
   return (
     <div style={{ padding: '2rem', fontFamily: 'sans-serif' }}>
       <h1 style={{ fontSize: '2rem', textAlign: 'center' }}>YouTube Persona Comparison Simulator</h1>
+      <div style={{ textAlign: 'center', margin: '1rem' }}>
+        <button onClick={generateFeeds} style={{ padding: '0.5rem 1rem', fontSize: '1rem', cursor: 'pointer' }}>Generate Feeds</button>
+      </div>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2rem', justifyContent: 'center' }}>
         {['A', 'B'].map(label => (
           <div key={label} style={{ flex: '1 1 100%', maxWidth: '600px', border: '1px solid #ccc', borderRadius: '8px', padding: '1rem' }}>
@@ -172,3 +175,4 @@ export default function Home() {
     </div>
   );
 }
+
