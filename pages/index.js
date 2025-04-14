@@ -1,5 +1,5 @@
 // pages/index.js
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Line } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -16,53 +16,57 @@ ChartJS.register(LineElement, PointElement, LinearScale, CategoryScale, Title, T
 
 const traits = ["Curious", "Ironic", "Analytical", "Tribalist", "Anger-prone"];
 
-const sampleVideos = {
-  centrist: [
-    { id: "dQw4w9WgXcQ", title: "Is Climate Change Real? A Balanced Discussion", channel: "Science Talks", views: "1.2M views", uploaded: "3 days ago", reason: "Matches centrist science & tech interest" },
-    { id: "9bZkp7q19f0", title: "The Future of AI: Opportunities & Risks", channel: "Tech Insight", views: "842K views", uploaded: "1 week ago", reason: "Trending AI topic with moderate appeal" },
-  ],
-  radical_left: [
-    { id: "3fumBcKC6RE", title: "Capitalism is Failing Us", channel: "Revolt Media", views: "2.3M views", uploaded: "2 days ago", reason: "Popular with users who engage with anti-capitalist narratives" },
-    { id: "2ZIpFytCSVc", title: "The Truth About Colonial History", channel: "History Reclaimed", views: "1.1M views", uploaded: "5 days ago", reason: "Recommended due to interest in social justice history" },
-  ],
-  radical_right: [
-    { id: "MtN1YnoL46Q", title: "Why Traditional Values Matter", channel: "Patriot Vision", views: "3.4M views", uploaded: "1 day ago", reason: "Aligns with culturally conservative themes" },
-    { id: "tgbNymZ7vqY", title: "The Real Agenda of Globalism", channel: "Unfiltered Truth", views: "2.8M views", uploaded: "4 days ago", reason: "Appeals to viewers with nationalist skepticism" },
-  ]
-};
-
 const defaultPersona = () => ({ politics: 50, traits: [], interactions: {}, feed: [], timeline: [] });
+
+async function fetchYouTubeVideos(query, maxResults = 5) {
+  const apiKey = process.env.NEXT_PUBLIC_YOUTUBE_API_KEY;
+  const response = await fetch(
+    `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=${maxResults}&q=${encodeURIComponent(query)}&type=video&key=${apiKey}`
+  );
+  const data = await response.json();
+  return data.items.map(item => ({
+    id: item.id.videoId,
+    title: item.snippet.title,
+    channel: item.snippet.channelTitle,
+    uploaded: 'recent',
+    views: 'unknown',
+    reason: `Matched query: ${query}`
+  }));
+}
 
 export default function Home() {
   const [personas, setPersonas] = useState({ A: defaultPersona(), B: defaultPersona() });
 
-  const generateFeeds = () => {
-    const getFeed = (p, interactions) => {
-      if ((interactions['3fumBcKC6RE'] || 0) > 2) return [...sampleVideos.radical_left];
-      if ((interactions['MtN1YnoL46Q'] || 0) > 2) return [...sampleVideos.radical_right];
-      if (p < 30) return [...sampleVideos.radical_left];
-      else if (p > 70) return [...sampleVideos.radical_right];
-      return [...sampleVideos.centrist];
+  useEffect(() => {
+    generateFeeds();
+  }, []);
+
+  const generateFeeds = async () => {
+    const getFeed = async (p, traits, interactions) => {
+      let query = p < 30 ? "leftist politics" : p > 70 ? "conservative news" : "centrist news";
+      if (traits.includes("Ironic")) query += " satire";
+      if (traits.includes("Analytical")) query += " deep dive";
+      if ((interactions['3fumBcKC6RE'] || 0) > 2) query = "anti-capitalism";
+      if ((interactions['MtN1YnoL46Q'] || 0) > 2) query = "patriotism globalism";
+      return await fetchYouTubeVideos(query);
     };
 
-    setPersonas(prev => {
-      const updated = { ...prev };
-      Object.keys(updated).forEach(key => {
-        const persona = updated[key];
-        const feed = getFeed(persona.politics, persona.interactions);
-        updated[key] = {
-          ...persona,
-          feed,
-          timeline: [...persona.timeline, {
-            timestamp: new Date().toLocaleTimeString(),
-            politics: persona.politics,
-            traits: [...persona.traits],
-            interactions: { ...persona.interactions },
-          }]
-        };
-      });
-      return updated;
-    });
+    const updated = { ...personas };
+    for (const key of Object.keys(updated)) {
+      const p = updated[key];
+      const feed = await getFeed(p.politics, p.traits, p.interactions);
+      updated[key] = {
+        ...p,
+        feed,
+        timeline: [...p.timeline, {
+          timestamp: new Date().toLocaleTimeString(),
+          politics: p.politics,
+          traits: [...p.traits],
+          interactions: { ...p.interactions },
+        }]
+      };
+    }
+    setPersonas(updated);
   };
 
   const toggleTrait = (label, trait) => {
@@ -100,13 +104,10 @@ export default function Home() {
   return (
     <div style={{ padding: '2rem', fontFamily: 'sans-serif' }}>
       <h1 style={{ fontSize: '2rem', textAlign: 'center' }}>YouTube Persona Comparison Simulator</h1>
-      <div style={{ textAlign: 'center', margin: '1rem 0' }}>
-        <button onClick={generateFeeds}>Generate Feeds</button>
-      </div>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2rem' }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2rem', justifyContent: 'center' }}>
         {['A', 'B'].map(label => (
-          <div key={label} style={{ flex: '1 1 45%', border: '1px solid #ccc', borderRadius: '8px', padding: '1rem' }}>
-            <h2>Persona {label}</h2>
+          <div key={label} style={{ flex: '1 1 100%', maxWidth: '600px', border: '1px solid #ccc', borderRadius: '8px', padding: '1rem' }}>
+            <h2 style={{ textAlign: 'center' }}>Persona {label}</h2>
             <label>Political Leaning: {personas[label].politics}</label>
             <input
               type="range"
@@ -130,6 +131,9 @@ export default function Home() {
                 <p><em>Why: {video.reason}</em></p>
                 <button onClick={() => logInteraction(label, video.id, 'like')}>Like</button>
                 <button onClick={() => logInteraction(label, video.id, 'dislike')}>Dislike</button>
+                {personas[label].interactions[video.id] !== undefined && (
+                  <p style={{ fontSize: '0.85rem', color: '#4caf50' }}>Interactions: {personas[label].interactions[video.id]}</p>
+                )}
               </div>
             ))}
             <h3>Timeline</h3>
