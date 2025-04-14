@@ -71,23 +71,7 @@ export default function Home() {
       return merged.slice(0, 6);
     };
 
-    const updated = { ...personas };
-    for (const key of Object.keys(updated)) {
-      const p = updated[key];
-      const feed = await getFeed(p.politics, p.traits, p.interactions);
-      updated[key] = {
-        ...p,
-        feed,
-        timeline: [...p.timeline, {
-          timestamp: new Date().toLocaleTimeString(),
-          politics: p.politics,
-          traits: [...p.traits],
-          interactions: { ...p.interactions },
-        }]
-      };
-    }
-    setPersonas(updated);
-  };
+    
 
     const updated = { ...personas };
     for (const key of Object.keys(updated)) {
