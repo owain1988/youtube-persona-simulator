@@ -29,7 +29,7 @@ async function fetchYouTubeVideos(query, maxResults = 5) {
     title: item.snippet.title,
     channel: item.snippet.channelTitle,
     description: item.snippet.description.split(/\n|\./)[0],
-    reason: `Matched query: ${query}`
+    
   }));
 }
 
@@ -39,10 +39,13 @@ export default function Home() {
   const generateFeeds = async () => {
     const getFeed = async (p, traits, interactions) => {
       let query = p < 30 ? "leftist politics" : p > 70 ? "conservative news" : "centrist news";
-      if (traits.includes("Ironic")) query += " satire";
-      if (traits.includes("Analytical")) query += " deep dive";
+      if (traits.includes("Ironic")) query += " satire edgy humor";
+      if (traits.includes("Analytical")) query += " explainer longform analysis";
       if ((interactions['3fumBcKC6RE'] || 0) > 2) query = "anti-capitalism";
       if ((interactions['MtN1YnoL46Q'] || 0) > 2) query = "patriotism globalism";
+      if (traits.includes("Curious")) query += " documentary";
+      if (traits.includes("Tribalist")) query += " political debate clash reaction";
+      if (traits.includes("Anger-prone")) query += " rant outrage controversy";
       return await fetchYouTubeVideos(query);
     };
 
@@ -134,7 +137,7 @@ export default function Home() {
                 <iframe width="100%" height="200" src={`https://www.youtube.com/embed/${video.id}`} title={video.title} frameBorder="0" allow="autoplay"></iframe>
                 <p><strong>{video.title}</strong> - {video.channel}</p>
                 <p><em>{video.description}</em></p>
-                <p><em>Why: {video.reason}</em></p>
+                
                 <button onClick={() => logInteraction(label, video.id, 'like')}>Like</button>
                 <button onClick={() => logInteraction(label, video.id, 'dislike')}>Dislike</button>
                 {personas[label].interactions[video.id] !== undefined && (
@@ -178,4 +181,5 @@ export default function Home() {
     </div>
   );
 }
+
 
