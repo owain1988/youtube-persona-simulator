@@ -38,15 +38,43 @@ export default function Home() {
 
   const generateFeeds = async () => {
     const getFeed = async (p, traits, interactions) => {
-      let query = p < 30 ? "leftist politics" : p > 70 ? "conservative news" : "centrist news";
-      if (traits.includes("Ironic")) query += " satire edgy humor";
-      if (traits.includes("Analytical")) query += " explainer longform analysis";
-      if ((interactions['3fumBcKC6RE'] || 0) > 2) query = "anti-capitalism";
-      if ((interactions['MtN1YnoL46Q'] || 0) > 2) query = "patriotism globalism";
-      if (traits.includes("Curious")) query += " documentary";
-      if (traits.includes("Tribalist")) query += " political debate clash reaction";
-      if (traits.includes("Anger-prone")) query += " rant outrage controversy";
-      return await fetchYouTubeVideos(query);
+      const queries = [];
+
+      // Political leaning base queries
+      if (p < 30) queries.push("leftist politics", "progressive commentary");
+      else if (p > 70) queries.push("conservative news", "right wing media");
+      else queries.push("centrist politics", "independent analysis");
+
+      // Trait-based influence
+      if (traits.includes("Curious")) queries.push("documentary", "educational exploration");
+      if (traits.includes("Ironic")) queries.push("satire", "edgy humor");
+      if (traits.includes("Analytical")) queries.push("longform analysis", "explainer videos");
+      if (traits.includes("Tribalist")) queries.push("culture war debate", "reaction content");
+      if (traits.includes("Anger-prone")) queries.push("rant", "controversial outrage");
+
+      // Use recent interaction influence
+      const topInteracted = Object.entries(interactions)
+        .filter(([_, count]) => count > 1)
+        .map(([id]) => id);
+
+      if (topInteracted.length > 0) {
+        queries.push("follow up to " + topInteracted.slice(0, 2).join(" "));
+      }
+
+      // Fetch multiple feeds and merge
+      const results = await Promise.all(
+        queries.slice(0, 4).map(q => fetchYouTubeVideos(q, 3))
+      );
+      const merged = results.flat();
+
+      // Shuffle
+      for (let i = merged.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [merged[i], merged[j]] = [merged[j], merged[i]];
+      }
+
+      return merged.slice(0, 6);
+    };
     };
 
     const updated = { ...personas };
@@ -107,7 +135,7 @@ export default function Home() {
     <div style={{ padding: '2rem', fontFamily: 'sans-serif' }}>
       <h1 style={{ fontSize: '2rem', textAlign: 'center' }}>YouTube Persona Comparison Simulator</h1>
       <p style={{ maxWidth: '750px', margin: '1rem auto', textAlign: 'center' }}>
-        We all live in echo chambers these days whether we like it or not! Seeing how others navigate YouTube can be incredibly useful in understanding the plethora of world views that exist in todays complex and globally connected world. <br />
+        We all live in echo chambers these days whether we like it or not! But, seeing how others navigate YouTube can be incredibly useful in shaping understanding the plethora of world views that exist in todays complex and globally connected world. <br />
         Set political leanings and personality traits for each persona, then hit “Generate Feeds” to see their personalised YouTube recommendations side by side.
       </p>
       <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
@@ -181,5 +209,3 @@ export default function Home() {
     </div>
   );
 }
-
-
